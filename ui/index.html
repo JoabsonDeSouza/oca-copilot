@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OCA Copilot</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="expanded">
+  <!-- Estado recolhido: aba discreta grudada na borda -->
+  <div id="tab" class="tab" aria-hidden="true">
+    <span class="dot" style="--c:#e8853a"></span>
+    <span class="dot" style="--c:#a855f7"></span>
+    <span class="dot" style="--c:#4285f4"></span>
+  </div>
+
+  <!-- Estado expandido: painel completo -->
+  <main id="panel" class="panel" role="group" aria-label="Uso dos co-pilots">
+    <div id="agents" class="agents" aria-live="polite"></div>
+    <div class="footer">
+      <button class="ficon" id="btn-min" title="Minimizar" aria-label="Minimizar">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <button class="ficon" id="btn-settings" title="Ajustes" aria-label="Ajustes">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z" />
+        </svg>
+      </button>
+      <button class="ficon" id="btn-overlap" title="Sobrepor (manter por cima de tudo)" aria-label="Sobrepor" aria-pressed="true">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="8" y="8" width="12" height="12" rx="2" />
+          <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        </svg>
+      </button>
+      <button class="ficon" id="btn-duo" title="Dupla: Claude x Codex discutindo no terminal" aria-label="Dupla">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 11a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H8l-4 2z" />
+          <path d="M14 8.5A3 3 0 0 1 16 8h1a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3" />
+        </svg>
+      </button>
+    </div>
+  </main>
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

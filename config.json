@@ -1,0 +1,9 @@
+{
+  "refreshSeconds": 45,
+  "claude": {
+    "blockTokenBudget": null
+  },
+  "gemini": {
+    "dailyRequestBudget": 1000
+  }
+}

@@ -1,0 +1,12 @@
+# dependencias
+node_modules/
+
+# build (Rust / Tauri)
+/src-tauri/target/
+/src-tauri/gen/
+
+# macOS
+.DS_Store
+
+# logs / temporarios
+*.log

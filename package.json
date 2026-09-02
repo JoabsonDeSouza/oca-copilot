@@ -1,0 +1,16 @@
+{
+  "name": "oca-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cockpit de co-pilots (Claude / Codex / Gemini): aneis de uso na menu bar",
+  "type": "module",
+  "scripts": {
+    "collect": "node src-collector/collector.mjs"
+  },
+  "dependencies": {
+    "ccusage": "^20.0.20"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
+  }
+}
