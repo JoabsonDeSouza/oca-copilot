@@ -6,6 +6,12 @@ coding assistant's rate limit you have burned: **Claude Code**, **Codex** and
 
 It sits as a discreet tab on the right edge of your screen and expands on hover.
 
+<p align="center">
+  <img src="assets/widget.png" width="260" alt="OCA Copilot expanded" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/widget-collapsed.png" width="80" alt="OCA Copilot collapsed tab" />
+</p>
+
 > Built with [Tauri](https://tauri.app) (lightweight shell) + a small Node
 > collector that reads each tool's local usage data. No servers, no accounts,
 > no data leaves your machine.
