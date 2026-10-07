@@ -8,19 +8,45 @@
 </head>
 <body class="expanded">
   <!-- Estado recolhido: aba discreta grudada na borda -->
-  <div id="tab" class="tab" aria-hidden="true">
-    <span class="dot" style="--c:#e8853a"></span>
-    <span class="dot" style="--c:#a855f7"></span>
-    <span class="dot" style="--c:#4285f4"></span>
+  <div id="tab" class="tab">
+    <button id="tab-toggle" class="tab-toggle" type="button" title="Clique para abrir; segure para mover" aria-label="Abrir painel ou segurar para mover">
+      <span id="tab-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg></span>
+    </button>
+    <span class="dot" data-id="claude" style="--c:#e8853a"></span>
+    <span class="dot" data-id="codex" style="--c:#a855f7"></span>
+    <span class="dot" data-id="gemini" style="--c:#4285f4"></span>
+    <span class="dot" data-id="opencode" style="--c:#f3f3f3"></span>
   </div>
 
   <!-- Estado expandido: painel completo -->
   <main id="panel" class="panel" role="group" aria-label="Uso dos co-pilots">
     <div id="agents" class="agents" aria-live="polite"></div>
+    <section id="provider-settings" class="provider-settings" aria-label="Configuração de provedores">
+      <header class="settings-header">
+        <div>
+          <div class="settings-eyebrow">PREFERÊNCIAS</div>
+          <h1>Provedores</h1>
+        </div>
+        <button class="back-button" id="btn-settings-back" aria-label="Voltar ao painel">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6M9 12h11" /></svg>
+          <span>Voltar</span>
+        </button>
+      </header>
+      <p class="settings-description">Ative provedores e arraste ☰ para mudar a ordem.</p>
+      <label class="launch-mode" for="launch-mode">Ao clicar no provedor
+        <select id="launch-mode">
+          <option value="cli">Abrir CLI se instalado</option>
+          <option value="terminal">Abrir Terminal</option>
+        </select>
+      </label>
+      <div id="provider-options" class="provider-options"></div>
+      <div id="settings-status" class="settings-status" role="status" aria-live="polite"></div>
+      <div class="settings-footnote">Desativar também pausa a coleta daquele provedor.</div>
+    </section>
     <div class="footer">
       <button class="ficon" id="btn-min" title="Minimizar" aria-label="Minimizar">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 9l6 6 6-6" />
+          <path d="M6 15l6-6 6 6" />
         </svg>
       </button>
       <button class="ficon" id="btn-settings" title="Ajustes" aria-label="Ajustes">
@@ -33,12 +59,6 @@
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <rect x="8" y="8" width="12" height="12" rx="2" />
           <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
-        </svg>
-      </button>
-      <button class="ficon" id="btn-duo" title="Dupla: Claude x Codex discutindo no terminal" aria-label="Dupla">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 11a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H8l-4 2z" />
-          <path d="M14 8.5A3 3 0 0 1 16 8h1a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3" />
         </svg>
       </button>
     </div>

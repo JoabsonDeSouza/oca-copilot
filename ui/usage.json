@@ -1,10 +1,13 @@
 {
   "generatedAt": 0,
   "refreshSeconds": 45,
+  "enabledProviders": { "claude": true, "codex": true, "gemini": true, "opencode": true },
+  "providerOrder": ["claude", "codex", "gemini", "opencode"],
   "dayTokens": { "total": 12000000, "real": 250000, "cost": 18.5 },
   "agents": [
     { "id": "claude", "label": "Claude", "color": "#e8853a", "status": "ok", "percent": 42, "windowMinutes": 300, "resetAt": 0, "detail": "exemplo" },
     { "id": "codex", "label": "Codex", "color": "#a855f7", "status": "ok", "percent": 18, "windowMinutes": 300, "resetAt": 0, "detail": "exemplo" },
-    { "id": "gemini", "label": "Gemini", "color": "#4285f4", "status": "setup", "percent": null, "detail": "exemplo" }
+    { "id": "gemini", "label": "Gemini", "color": "#4285f4", "status": "setup", "percent": null, "detail": "exemplo" },
+    { "id": "opencode", "label": "OpenCode", "color": "#f3f3f3", "available": false, "reason": "quota_unavailable", "status": "unavailable", "percent": null, "detail": "quota indisponível (exemplo offline)" }
   ]
 }

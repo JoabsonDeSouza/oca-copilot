@@ -22,6 +22,7 @@ const CONFIG = (() => {
 function safe(fn, fallback = null) {
   try { return fn(); } catch { return fallback; }
 }
+const providerEnabled = (id) => CONFIG[id]?.enabled !== false;
 const toEpochS = (v) => {
   if (v == null) return null;
   if (typeof v === 'number') return v > 1e12 ? Math.floor(v / 1000) : Math.floor(v);
@@ -111,6 +112,15 @@ function collectCodex() {
     ? 0
     : Math.max(0, Math.min(100, Math.round(rl.primary.used_percent ?? 0)));
   const ageMin = (Date.now() - r.mtimeMs) / 60000;
+  const quotaWindow = (entry) => entry && ({
+    label: entry.window_minutes <= 360 ? `${Math.round(entry.window_minutes / 60)}h`
+      : entry.window_minutes % 1440 === 0 ? `${entry.window_minutes / 1440} dias`
+        : `${Math.round(entry.window_minutes / 60)}h`,
+    usedPercent: Math.max(0, Math.min(100, Math.round(entry.used_percent ?? 0))),
+    resetAt: toEpochS(entry.resets_at),
+    status: 'ok',
+  });
+  const windows = [quotaWindow(rl.primary), quotaWindow(rl.secondary)].filter(Boolean);
   return {
     ...base,
     status: ageMin > (rl.primary.window_minutes ?? 300) ? 'stale' : 'ok',
@@ -122,6 +132,7 @@ function collectCodex() {
     resetAt,
     plan: rl.plan_type ?? null,
     secondaryPercent: rl.secondary?.used_percent ?? null,
+    windows,
     detail: `janela de ${Math.round((rl.primary.window_minutes ?? 300)/60)}h, plano ${rl.plan_type ?? '?'}`,
   };
 }
@@ -138,6 +149,98 @@ function collectGemini() {
   }
   // Placeholder: ligado apos descobrir a telemetria real do gemini-cli.
   return { ...base, status: 'setup', percent: null, detail: 'login ok, telemetria a mapear' };
+}
+
+// ========================= OPENCODE GO ================================
+// Only Go exposes official quota windows. Credential stays inside collector.
+const OPENCODE_WINDOWS = [
+  ['rolling', 'Diário'], ['weekly', 'Semanal'], ['monthly', 'Mensal'],
+];
+
+function opencodeInstalled() {
+  const paths = (process.env.PATH || '').split(':').map((p) => join(p, 'opencode'));
+  return [
+    ...paths,
+    join(HOME, '.opencode', 'bin', 'opencode'),
+    join(HOME, '.local', 'bin', 'opencode'),
+    '/opt/homebrew/bin/opencode', '/usr/local/bin/opencode',
+  ].some((p) => existsSync(p));
+}
+
+function opencodeUnavailable(reason, detail) {
+  return {
+    id: 'opencode', label: 'OpenCode', color: '#f3f3f3',
+    available: false, reason, status: 'unavailable', percent: null, detail,
+  };
+}
+
+async function collectOpenCode() {
+  if (!opencodeInstalled()) return opencodeUnavailable('not_installed', 'OpenCode não instalado');
+
+  const dataDir = process.env.XDG_DATA_HOME || join(HOME, '.local', 'share');
+  const authPath = join(dataDir, 'opencode', 'auth.json');
+  let auth;
+  try { auth = JSON.parse(readFileSync(authPath, 'utf8')); }
+  catch (e) {
+    return opencodeUnavailable(e?.code === 'ENOENT' ? 'not_authenticated' : 'invalid_auth',
+      e?.code === 'ENOENT' ? 'sem autenticação' : 'autenticação inválida');
+  }
+
+  const credential = auth?.['opencode-go'];
+  if (!credential || credential.type !== 'api' || typeof credential.key !== 'string' || !credential.key) {
+    const hasOtherProvider = auth && typeof auth === 'object' && Object.keys(auth).length > 0;
+    return opencodeUnavailable(hasOtherProvider ? 'quota_unavailable' : 'not_authenticated',
+      hasOtherProvider ? 'quota oficial disponível só para OpenCode Go' : 'sem autenticação');
+  }
+
+  let response;
+  try {
+    response = await fetch('https://opencode.ai/zen/go/v1/usage', {
+      headers: { Authorization: `Bearer ${credential.key}`, Accept: 'application/json' },
+      signal: AbortSignal.timeout(12000),
+    });
+  } catch (e) {
+    return opencodeUnavailable(e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'timeout' : 'api_unavailable',
+      e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'API excedeu tempo limite' : 'API indisponível');
+  }
+
+  if (!response.ok) {
+    const reasons = { 401: 'not_authenticated', 403: 'quota_unavailable', 429: 'rate_limited' };
+    const reason = reasons[response.status] || (response.status >= 500 ? 'api_unavailable' : 'api_error');
+    const detail = response.status === 401 ? 'credencial inválida ou expirada'
+      : response.status === 403 ? 'quota OpenCode Go indisponível para esta conta'
+        : response.status === 429 ? 'limite da API atingido'
+          : response.status >= 500 ? 'API indisponível' : 'resposta de erro da API';
+    return opencodeUnavailable(reason, detail);
+  }
+
+  let payload;
+  try { payload = await response.json(); }
+  catch { return opencodeUnavailable('invalid_response', 'resposta inválida da API'); }
+
+  const source = payload?.usage;
+  if (!source || !OPENCODE_WINDOWS.some(([id]) => source[id] && typeof source[id] === 'object')) {
+    return opencodeUnavailable('invalid_response', 'formato de quota desconhecido');
+  }
+  const windows = OPENCODE_WINDOWS.flatMap(([id, label]) => {
+    const w = source[id];
+    if (!w || typeof w.percent !== 'number' || !Number.isFinite(w.percent)
+      || w.percent < 0 || w.percent > 100) return [];
+    return [{
+      id, label, usedPercent: Math.round(w.percent),
+      remainingPercent: 100 - Math.round(w.percent),
+      status: typeof w.status === 'string' ? w.status : null,
+      resetAt: toEpochS(w.resetsAt), durationMinutes: null, limit: null,
+    }];
+  });
+  if (!windows.length) return opencodeUnavailable('invalid_response', 'janelas de quota inválidas');
+  const primary = windows.find((w) => w.id === 'rolling') || windows[0];
+  return {
+    id: 'opencode', label: 'OpenCode', color: '#f3f3f3',
+    available: true, reason: null, status: primary.status === 'rate-limited' ? 'exhausted' : 'ok',
+    percent: primary.usedPercent, resetAt: primary.resetAt, windowMinutes: null,
+    windows, detail: 'quota oficial OpenCode Go',
+  };
 }
 
 // ========================= TOKENS DO DIA =================================
@@ -189,12 +292,27 @@ function codexDay() {
 }
 
 // ========================= SAIDA =========================================
-const agents = [collectClaude(), collectCodex(), collectGemini()];
-const cl = safe(() => ccusageDaily(), { total: 0, real: 0, cost: 0 });
-const cx = safe(() => codexDay(), { total: 0, real: 0 });
+const agents = [];
+if (providerEnabled('claude')) agents.push(collectClaude());
+if (providerEnabled('codex')) agents.push(collectCodex());
+if (providerEnabled('gemini')) agents.push(collectGemini());
+if (providerEnabled('opencode')) {
+  const opencode = await collectOpenCode().catch(() =>
+    opencodeUnavailable('collector_error', 'falha ao consultar quota OpenCode'));
+  agents.push(opencode);
+}
+const cl = providerEnabled('claude')
+  ? safe(() => ccusageDaily(), { total: 0, real: 0, cost: 0 })
+  : { total: 0, real: 0, cost: 0 };
+const cx = providerEnabled('codex') ? safe(() => codexDay(), { total: 0, real: 0 }) : { total: 0, real: 0 };
 process.stdout.write(JSON.stringify({
   generatedAt: Date.now(),
   refreshSeconds: CONFIG.refreshSeconds ?? 45,
+  enabledProviders: Object.fromEntries(
+    ['claude', 'codex', 'gemini', 'opencode'].map((id) => [id, providerEnabled(id)]),
+  ),
+  providerOrder: Array.isArray(CONFIG.providerOrder) ? CONFIG.providerOrder : ['claude', 'codex', 'gemini', 'opencode'],
+  openMode: CONFIG.openMode === 'terminal' ? 'terminal' : 'cli',
   dayTokens: {
     total: (cl.total || 0) + (cx.total || 0),
     real: (cl.real || 0) + (cx.real || 0),
